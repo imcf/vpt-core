@@ -4,6 +4,8 @@ from typing import Dict
 import numpy as np
 from shapely import geometry
 
+from skimage.segmentation import expand_labels
+
 from vpt_core import log
 from vpt_core.segmentation.geometry_utils import (
     make_polygons_from_label_matrix,
@@ -19,15 +21,18 @@ class PolygonCreationParameters:
     simplification_tol: int
     smoothing_radius: int
     minimum_final_area: int
-
+    dilation_rad: int
 
 def generate_polygons_from_mask(mask: np.ndarray, polygon_parameters: Dict) -> SegmentationResult:
     log.info("generate_polygons_from_mask")
     parameters = PolygonCreationParameters(**polygon_parameters)
+    mask=dilate_labels(mask, parameters.dilation_rad)
     seg_result = get_polygons_from_mask(mask, parameters.smoothing_radius, parameters.simplification_tol)
     seg_result.remove_polys(lambda poly: poly.area < parameters.minimum_final_area)
     return seg_result
 
+def dilate_labels(mask, dilation_rad):
+    return expand_labels(mask, distance=dilation_rad)
 
 def get_polygons_from_mask(mask: np.ndarray, smoothing_radius, simplification_tolerance) -> SegmentationResult:
     """
