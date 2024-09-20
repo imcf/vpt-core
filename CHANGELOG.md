@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v1.2.0 (2024-09-20)
+
+### Feature
+
+* Support MERSCOPE Ultra ([#2](https://github.com/Vizgen/vpt-core/issues/2)) ([`91c6352`](https://github.com/Vizgen/vpt-core/commit/91c63523222167fb1fe42dbb96126deca84beb4f))
+
 ## v1.1.0 (2024-02-08)
 
 ### Feature
