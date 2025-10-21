@@ -13,6 +13,7 @@ from vpt_core.segmentation.seg_result import SegmentationResult
 class PolygonParams:
     min_final_area: int = 0
     min_distance_between_entities: int = 2
+    dilation_rad: int = 0
 
 
 @dataclass
@@ -22,23 +23,37 @@ class SegFusion:
 
     def __post_init__(self):
         if isinstance(self.fused_polygon_postprocessing_parameters, dict):
-            self.fused_polygon_postprocessing_parameters = PolygonParams(**self.fused_polygon_postprocessing_parameters)
+            self.fused_polygon_postprocessing_parameters = PolygonParams(
+                **self.fused_polygon_postprocessing_parameters
+            )
 
 
-def run_harmonization(segmentations: List[SegmentationResult], min_distance: int, min_area: int):
-    segmentation: SegmentationResult = SegmentationResult.combine_segmentations(segmentations)
+def run_harmonization(
+    segmentations: List[SegmentationResult], min_distance: int, min_area: int
+):
+    segmentation: SegmentationResult = SegmentationResult.combine_segmentations(
+        segmentations
+    )
     segmentation.make_non_overlapping_polys(min_distance, min_area)
     return segmentation
 
 
-def run_union_fusion(segmentations: List[SegmentationResult], min_distance: int, min_area: int):
-    segmentation: SegmentationResult = SegmentationResult.combine_segmentations(segmentations)
+def run_union_fusion(
+    segmentations: List[SegmentationResult], min_distance: int, min_area: int
+):
+    segmentation: SegmentationResult = SegmentationResult.combine_segmentations(
+        segmentations
+    )
     segmentation.union_intersections(min_distance, min_area)
     return segmentation
 
 
-def run_larger_fusion(segmentations: List[SegmentationResult], min_distance: int, min_area: int):
-    segmentation: SegmentationResult = SegmentationResult.combine_segmentations(segmentations)
+def run_larger_fusion(
+    segmentations: List[SegmentationResult], min_distance: int, min_area: int
+):
+    segmentation: SegmentationResult = SegmentationResult.combine_segmentations(
+        segmentations
+    )
     segmentation.larger_resolve_intersections(min_distance, min_area)
     return segmentation
 
@@ -59,12 +74,18 @@ def fuse_task_polygons(
     tasks_entities = [res.entity_type for res in segmentation_results]
 
     for entity_type in set(tasks_entities):
-        parameters = fusion_parameters[entity_type].fused_polygon_postprocessing_parameters
+        parameters = fusion_parameters[
+            entity_type
+        ].fused_polygon_postprocessing_parameters
         strategy_key = fusion_parameters[entity_type].entity_fusion_strategy.upper()
         if strategy_key not in FusionCallbacks.__members__:
             raise Exception("Invalid fusion strategy")
 
-        cur_results = [seg_res for i, seg_res in enumerate(segmentation_results) if tasks_entities[i] == entity_type]
+        cur_results = [
+            seg_res
+            for i, seg_res in enumerate(segmentation_results)
+            if tasks_entities[i] == entity_type
+        ]
         seg_result = FusionCallbacks[strategy_key].value[1](
             cur_results,
             parameters.min_distance_between_entities,

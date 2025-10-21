@@ -20,6 +20,7 @@ class PolygonCreationParameters:
     simplification_tol: int
     smoothing_radius: int
     minimum_final_area: int
+    dilation_rad: int = 0
 
 
 def generate_polygons_from_mask(
