@@ -3,15 +3,14 @@ from typing import Dict
 
 import numpy as np
 from shapely import geometry
-
 from skimage.segmentation import expand_labels
 
 from vpt_core import log
 from vpt_core.segmentation.geometry_utils import (
-    make_polygons_from_label_matrix,
-    smooth_and_simplify,
     convert_to_multipoly,
     get_valid_geometry,
+    make_polygons_from_label_matrix,
+    smooth_and_simplify,
 )
 from vpt_core.segmentation.seg_result import SegmentationResult
 
@@ -21,20 +20,28 @@ class PolygonCreationParameters:
     simplification_tol: int
     smoothing_radius: int
     minimum_final_area: int
-    dilation_rad: int
 
-def generate_polygons_from_mask(mask: np.ndarray, polygon_parameters: Dict) -> SegmentationResult:
+
+def generate_polygons_from_mask(
+    mask: np.ndarray, polygon_parameters: Dict
+) -> SegmentationResult:
     log.info("generate_polygons_from_mask")
     parameters = PolygonCreationParameters(**polygon_parameters)
-    mask=dilate_labels(mask, parameters.dilation_rad)
-    seg_result = get_polygons_from_mask(mask, parameters.smoothing_radius, parameters.simplification_tol)
+    mask = dilate_labels(mask, parameters.dilation_rad)
+    seg_result = get_polygons_from_mask(
+        mask, parameters.smoothing_radius, parameters.simplification_tol
+    )
     seg_result.remove_polys(lambda poly: poly.area < parameters.minimum_final_area)
     return seg_result
+
 
 def dilate_labels(mask, dilation_rad):
     return expand_labels(mask, distance=dilation_rad)
 
-def get_polygons_from_mask(mask: np.ndarray, smoothing_radius, simplification_tolerance) -> SegmentationResult:
+
+def get_polygons_from_mask(
+    mask: np.ndarray, smoothing_radius, simplification_tolerance
+) -> SegmentationResult:
     """
     Accepts either a 2D or 3D numpy array label matrix, returns a SegmentationResult of
     MultiPolygons surrounding each label/mask. Performs smoothing and simplification of
@@ -59,7 +66,10 @@ def get_polygons_from_mask(mask: np.ndarray, smoothing_radius, simplification_to
                 raw_polys = make_polygons_from_label_matrix(mask_id, mask[z, :, :])
 
                 polys = [
-                    smooth_and_simplify(raw_poly, smoothing_radius, simplification_tolerance) for raw_poly in raw_polys
+                    smooth_and_simplify(
+                        raw_poly, smoothing_radius, simplification_tolerance
+                    )
+                    for raw_poly in raw_polys
                 ]
                 polys = [poly for poly in polys if not poly.is_empty]
 
@@ -68,7 +78,9 @@ def get_polygons_from_mask(mask: np.ndarray, smoothing_radius, simplification_to
                     continue
 
                 # Transform the list of 1 or more mask polygons into a multipolygon
-                multi_poly = convert_to_multipoly(get_valid_geometry(geometry.MultiPolygon(polys)))
+                multi_poly = convert_to_multipoly(
+                    get_valid_geometry(geometry.MultiPolygon(polys))
+                )
                 polys_data.append(
                     {
                         SegmentationResult.detection_id_field: idx + 1,
